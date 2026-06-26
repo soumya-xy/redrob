@@ -1,0 +1,96 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyCharm / IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# Logs
+*.log
+precompute.log
+
+# OS-specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Project-specific generated files
+artifacts/
+*.pkl
+*.npy
+team_*.csv
+shortlist.json
+
+# Submission output (keep template, ignore actual)
+submission_metadata.yaml
+!submission_metadata_template.yaml
+
+# Large input data (optional - uncomment if these files are huge)
+# candidates.jsonl
+# sample_*.json
+# sample_*.csv
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Claude Code session files
+.claude/
+*.jsonl
+
+# Temporary files
+*.tmp
+*.bak
+*.orig

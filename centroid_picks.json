@@ -1,0 +1,171 @@
+{
+  "metadata": {
+    "purpose": "Reference centroid picks for the ranker's hybrid retrieval signal. 10 candidates were hand-picked from the 50-candidate shortlist to span the JD's 'ideal candidate' profile across JD criteria, seniority, geography, and company-type diversity. This file is the human-judgment anchor for the ranker and serves as Stage 4 evidence that the centroid was a deliberate, defensible choice.",
+    "jd_ideal_candidate_paragraph": "6-8 years total experience, of which 4-5 are in applied ML/AI roles at product companies (not pure services). Has shipped at least one end-to-end ranking, search, or recommendation system to real users at meaningful scale. Has strong opinions about retrieval (hybrid vs dense), evaluation (offline vs online), and LLM integration (when to fine-tune vs prompt) — and can defend them with reference to systems they actually built. Located in or willing to relocate to Noida or Pune. Active on Redrob platform (or has clear signal of being in the job market) so we can actually talk to them.",
+    "selection_diversity_principles": [
+      "One (or more) candidate per JD-criterion bucket: embedding_search, ranking_evaluation, recsys_matching, llm_finetune, ml_infra_distributed",
+      "Geographic spread weighted toward JD's preferred cities (Pune/Noida) but with coverage of other tier-1 Indian cities",
+      "Mix of big-tech pedigree (Netflix, Apple, Amazon, Uber, Salesforce) and Indian product companies (Paytm, Zomato, CRED, Razorpay, Flipkart, Freshworks, Sarvam, Rephrase)",
+      "Seniority mix: 1 Staff, 8 Senior/Lead, balanced between 5-6y and 7-8y experience",
+      "All picks are open_to_work=True and have meaningful recent activity on Redrob",
+      "Excluded CAND_0046525 because Genpact is borderline-services and would bias the centroid toward a consulting flavor"
+    ],
+    "excluded_with_reason": {
+      "CAND_0080766": "open_to_work=False — not the right centroid anchor for an availability-weighted ranker",
+      "CAND_0046525": "Genpact is borderline-services, 2.1 product_company_years — risks centroid bias",
+      "CAND_0092278": "open_to_work=False, 0.07 response rate — availability concerns",
+      "CAND_0007411": "open_to_work=False, 0.12 response rate — availability concerns",
+      "CAND_0083307": "Would have been a strong pick but I already have CAND_0041669 from CRED; chose geographic diversity",
+      "CAND_0055905_CAND_0028793": "Both London-based; only one global-tier pick needed (covered by CAND_0071974)"
+    }
+  },
+  "picks": [
+    {
+      "rank": 1,
+      "candidate_id": "CAND_0077337",
+      "current_title": "Staff Machine Learning Engineer",
+      "current_company": "Paytm",
+      "years_of_experience": 7.0,
+      "location": "Kochi, Kerala, India",
+      "jd_criterion_justification": "Highest score in the shortlist (56.46). 21 ML keywords across career descriptions, 0.95 response rate, 68.0 GitHub activity, 6.9 product-company years. Recent role: 'Led the migration from keyword-based to embedding-based search across a 30M+ candidate corpus over 8 months. Designed three successive ranker variants and ran t...' — this is the JD's mandate (audit BM25+rule-based, identify highest-leverage fixes, ship v2 ranking with embeddings+hybrid retrieval+LLM re-ranking) described in past tense. Staff-level title signals the 'senior engineer judgment' the JD wants.",
+      "bucket_primary": "embedding_search",
+      "bucket_secondary": ["ranking_evaluation"],
+      "why_centroid": "This is the JD's ideal candidate made concrete. If the centroid has to be one person, this is that person."
+    },
+    {
+      "rank": 2,
+      "candidate_id": "CAND_0018499",
+      "current_title": "Senior Machine Learning Engineer",
+      "current_company": "Zomato",
+      "years_of_experience": 7.2,
+      "location": "Noida, Uttar Pradesh, India",
+      "jd_criterion_justification": "Top-2 score, located in Noida (JD's first-preferred city), 7.2 product-company years (entire career at product companies), 94.8 GitHub (highest in shortlist), ex-Flipkart 42-month tenure showing staying power (JD explicitly rejects title-chasers who switch every 1.5y). Recent role: 'Fine-tuned LLaMA-2-7B and Mistral-7B variants using LoRA and QLoRA for domain-specific candidate-JD matching. Built the data curation pipeline that ge...' — domain overlap with Redrob's exact problem. Covers the LLM fine-tune bucket directly.",
+      "bucket_primary": "llm_finetune",
+      "bucket_secondary": ["embedding_search"],
+      "why_centroid": "Brings LLM fine-tuning (LoRA/QLoRA) and Noida location — covers two JD requirements at once."
+    },
+    {
+      "rank": 3,
+      "candidate_id": "CAND_0046064",
+      "current_title": "Senior NLP Engineer",
+      "current_company": "Salesforce",
+      "years_of_experience": 8.9,
+      "location": "Coimbatore, Tamil Nadu, India",
+      "jd_criterion_justification": "8.8 product-company years (deepest in shortlist), 23 ML keywords (most in shortlist). Recent role title is literally 'Senior ML Engineer — Search & Ranking @ Amazon' for 36 months with description: 'Owned the end-to-end ranking pipeline at a recommendations-heavy consumer product: candidate sourcing → embedding generation (using a fine-tuned BGE-large) → Pinecone retrieval...' — this is the JD's first 90 days in past tense. The Amazon pedigree covers 'shipped at meaningful scale' at the upper bound.",
+      "bucket_primary": "ranking_evaluation",
+      "bucket_secondary": ["recsys_matching", "embedding_search"],
+      "why_centroid": "The strongest 'shipped ranking at scale' profile. Anchors the centroid toward big-tech product ML."
+    },
+    {
+      "rank": 4,
+      "candidate_id": "CAND_0041669",
+      "current_title": "Recommendation Systems Engineer",
+      "current_company": "CRED",
+      "years_of_experience": 8.0,
+      "location": "Noida, Uttar Pradesh, India",
+      "jd_criterion_justification": "Title is exactly 'Recommendation Systems Engineer' (the JD's literal example: 'built a recommendation system at a product company'). Noida-based (JD's first-preferred city), 7.9 product-company years, recent role at Yellow.ai: 'Built a content recommendation system serving 10M+ users that combined collaborative filtering with content-based ranking. The system uses item-item similarity...' — direct match to the JD's 'hybrid vs dense' opinion requirement. 70.9 GitHub.",
+      "bucket_primary": "recsys_matching",
+      "bucket_secondary": ["ranking_evaluation"],
+      "why_centroid": "The recsys-matches-JD-example candidate. Noida location is a hard JD preference."
+    },
+    {
+      "rank": 5,
+      "candidate_id": "CAND_0002025",
+      "current_title": "Senior AI Engineer",
+      "current_company": "Apple",
+      "years_of_experience": 5.9,
+      "location": "Trivandrum, Kerala, India",
+      "jd_criterion_justification": "Clean small-to-mid company product-company trajectory (Lead AI Engineer @ Aganitha for 28 months), 96.9 GitHub (top-3 in shortlist). The Aganitha description mentions 'candidate-JD matching' data pipeline — Redrob's exact problem space. Apple pedigree covers 'shipped at meaningful scale'. Lower years (5.9y) is a deliberate pick to keep the centroid from being age-biased toward 8y+ candidates.",
+      "bucket_primary": "llm_finetune",
+      "bucket_secondary": ["recsys_matching"],
+      "why_centroid": "Brings the Apple + mid-stage-startup product mix. Domain overlap (candidate-JD matching) is direct."
+    },
+    {
+      "rank": 6,
+      "candidate_id": "CAND_0005649",
+      "current_title": "Senior Data Scientist",
+      "current_company": "Sarvam AI",
+      "years_of_experience": 7.4,
+      "location": "Delhi, Delhi, India",
+      "jd_criterion_justification": "Delhi-based (tier-1 city), 7.3 product-company years, 80.7 GitHub. Recent role at Glance as 'Search Engineer': 'Trained and shipped multiple ranking models for our product's discovery feed using XGBoost and LightGBM. Designed features across three families: content metadata...' — covers the JD's 'learning-to-rank models (XGBoost-based or neural)' nice-to-have requirement directly. Sarvam AI is an Indian AI-native company, signals product-AI focus.",
+      "bucket_primary": "ranking_evaluation",
+      "bucket_secondary": ["ml_infra_distributed"],
+      "why_centroid": "Covers the learning-to-rank bucket. Delhi geo covers a tier-1 city not yet represented in the picks."
+    },
+    {
+      "rank": 7,
+      "candidate_id": "CAND_0029367",
+      "current_title": "Senior Data Scientist",
+      "current_company": "Rephrase.ai",
+      "years_of_experience": 5.7,
+      "location": "Bangalore, Karnataka, India",
+      "jd_criterion_justification": "Deliberate startup pick — Rephrase.ai is 11-50 employees, gives the centroid the small-company product angle (not just big-tech), 5.6 product-company years at Vedantu + Rephrase.ai. Recent Vedantu role: 'Built the document ingestion pipeline (chunking, embedding via OpenAI)...' — covers the RAG side. 39.8 GitHub, open to work, 0.77 response rate, active in last 30 days.",
+      "bucket_primary": "ml_infra_distributed",
+      "bucket_secondary": ["llm_finetune"],
+      "why_centroid": "Brings the small-company (11-50 employees) product ML angle. Bangalore geo coverage. Lower years keeps centroid from being senior-biased."
+    },
+    {
+      "rank": 8,
+      "candidate_id": "CAND_0086022",
+      "current_title": "Senior Applied Scientist",
+      "current_company": "Sarvam AI",
+      "years_of_experience": 5.3,
+      "location": "Kolkata, West Bengal, India",
+      "jd_criterion_justification": "Ex-Uber 'Senior ML Engineer — Search & Ranking' for 38 months — Uber-scale ranking system is the upper bound of the JD's 'shipped at meaningful scale' requirement. 5.3y is at the lower end of the band, deliberately picked to counter the 8y+ picks. 75.2 GitHub, India-based, recent activity, open to work.",
+      "bucket_primary": "ranking_evaluation",
+      "bucket_secondary": ["ml_infra_distributed"],
+      "why_centroid": "Brings the Uber Search & Ranking pedigree. Kolkata covers a tier-1 city not yet in the picks. Lower years balances the seniority mix."
+    },
+    {
+      "rank": 9,
+      "candidate_id": "CAND_0068811",
+      "current_title": "Applied ML Engineer",
+      "current_company": "Freshworks",
+      "years_of_experience": 8.0,
+      "location": "Pune, Maharashtra, India",
+      "jd_criterion_justification": "Pune-based (JD's second-preferred city — JD says Pune or Noida, and the only Pune pick in the shortlist top-50), 7.9 product-company years, Freshworks is a known Indian product company with 8y tenure showing staying power. 0.42 response rate is a weakness I'm accepting because of the strong geo match — the JD specifically asks for Pune/Noida candidates.",
+      "bucket_primary": "ml_infra_distributed",
+      "bucket_secondary": ["recsys_matching"],
+      "why_centroid": "The Pune geographic anchor. JD explicitly asks for Pune/Noida and this is the only strong Pune pick."
+    },
+    {
+      "rank": 10,
+      "candidate_id": "CAND_0071974",
+      "current_title": "Senior AI Engineer",
+      "current_company": "Netflix",
+      "years_of_experience": 7.8,
+      "location": "Vizag, Andhra Pradesh, India",
+      "jd_criterion_justification": "82.8 GitHub (top-tier), Netflix pedigree covers 'shipped at FAANG-equivalent scale'. Deliberately picked a global-tier candidate to keep the centroid from being too India-narrow. The Vizag location is non-tier-1, but Netflix brand + GitHub signal compensate. 7.7 product-company years.",
+      "bucket_primary": "cross_cutting",
+      "bucket_secondary": ["ml_infra_distributed"],
+      "why_centroid": "The global-tier / FAANG-equivalent anchor. Prevents the centroid from being India-only or mid-tier-only."
+    }
+  ],
+  "summary": {
+    "total_picks": 10,
+    "buckets_covered": ["embedding_search", "ranking_evaluation", "recsys_matching", "llm_finetune", "ml_infra_distributed", "cross_cutting"],
+    "geographic_spread": {
+      "pune_or_noida": ["CAND_0018499", "CAND_0041669", "CAND_0068811"],
+      "delhi_ncr": ["CAND_0005649"],
+      "bangalore": ["CAND_0029367"],
+      "kerala": ["CAND_0077337", "CAND_0002025"],
+      "tamil_nadu": ["CAND_0046064"],
+      "west_bengal": ["CAND_0086022"],
+      "andhra_pradesh": ["CAND_0071974"]
+    },
+    "seniority_spread": {
+      "staff_plus": ["CAND_0077337"],
+      "senior_or_lead": ["CAND_0018499", "CAND_0046064", "CAND_0041669", "CAND_0002025", "CAND_0005649", "CAND_0029367", "CAND_0086022", "CAND_0068811", "CAND_0071974"]
+    },
+    "experience_band": {
+      "5_to_6_years": ["CAND_0002025", "CAND_0029367", "CAND_0086022"],
+      "6_to_7_years": ["CAND_0077337", "CAND_0018499", "CAND_0005649"],
+      "7_to_8_years": ["CAND_0041669", "CAND_0071974"],
+      "8_to_9_years": ["CAND_0046064", "CAND_0068811"]
+    },
+    "company_type_spread": {
+      "faang_or_equivalent": ["CAND_0046064 (Amazon)", "CAND_0002025 (Apple)", "CAND_0071974 (Netflix)", "CAND_0086022 (Uber)"],
+      "indian_product": ["CAND_0077337 (Paytm)", "CAND_0018499 (Zomato)", "CAND_0041669 (CRED)", "CAND_0005649 (Sarvam AI)", "CAND_0029367 (Rephrase.ai)", "CAND_0086022 (Sarvam AI)", "CAND_0068811 (Freshworks)"]
+    }
+  }
+}
