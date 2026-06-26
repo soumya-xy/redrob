@@ -121,68 +121,21 @@ def recent_role_phrase(c):
     return title, company
 
 
-# ---------- Template library ----------
-
-# Strong candidate templates (rank 1-30)
-STRONG_TEMPLATES = [
-    # Format: (template, generator_function) — generator returns the substituted text
-    "Senior {title} at {company} with {years} experience spanning {n_skills} JD-relevant skills including {skills}; {extras}",
-    "{title} at {company} ({years}) has shipped {skill_highlight} at scale — directly aligned with the JD's mandate to own retrieval and ranking systems",
-    "Strong product ML profile: {years} at {company} working on {skill_highlight}; {extras}",
-    "Career spans {n_career} roles with a {longest_tenure} — fits the JD's anti-title-chaser criterion; core skills in {skills} cover the retrieval/ranking requirement",
-    "{title} with {n_skills} JD-relevant skills ({skills}) and {product_years} at product companies; {location_note}",
-]
-
-# Mid candidate templates (rank 31-70)
-MID_TEMPLATES = [
-    "{title} at {company} ({years}) with relevant background in {skills}; {gap_note}",
-    "{years} experience as {title}; strong on {skill_highlight} but {gap_note}",
-    "{title} profile shows {n_skills} matching skills ({skills}); {gap_note}",
-    "Mid-band fit: {title} with {product_years} at product companies; {gap_note}",
-]
-
-# Low candidate templates (rank 71-100)
-LOW_TEMPLATES = [
-    "{title} at {company} ({years}) is below the JD's ideal band — included for completeness despite {gap_note}",
-    "Adjacent skills only: {title} has some {skills} but career trajectory and {gap_note} put them below the cutoff for the Senior AI Engineer role",
-    "Below cutoff: {gap_note}; included to round out the top-100 since they have some {skills} overlap",
-    "Lower fit: {title} ({years}) has {n_skills} JD-relevant skills but {gap_note}",
-]
-
-GAP_NOTES = [
-    "limited production retrieval experience",
-    "career trajectory is short of the 5-9y ideal band",
-    "no clear production ranking system on the resume",
-    "limited evidence of shipped-at-scale work",
-    "geographic location outside the JD's preferred cities",
-    "no demonstrated evaluation-framework experience",
-    "limited LLM-era work in career history",
-    "notice period is longer than ideal",
-    "open_to_work flag is False",
-    "recency of activity is a concern",
-    "skill list is keyword-heavy without matching career descriptions",
-    "primarily frontend/data-engineering background",
-]
-
-STRONG_EXTRAS = [
-    "active on Redrob with high recruiter response rate",
-    "located in or willing to relocate to the JD's preferred city",
-    "strong GitHub presence signals framework-fluency, not framework-dependence",
-    "open to work and recently active — meets the JD's availability requirement",
-    "career shows shipping discipline (long tenures, product companies)",
-]
-
-NOTICE_NOTES = {
-    'short': "notice period under 30 days is a plus",
-    'medium': "notice period is in the workable 30-60 day band",
-    'long': "notice period over 60 days is a concern",
-}
+# ---------- Reasoning components ----------
+# No more random templates. Build reasoning dynamically from actual features.
 
 
 # ---------- Main reasoning function ----------
 
 def generate_reasoning(c, rank, total_score):
-    """Generate a 1-2 sentence reasoning for one candidate at this rank."""
+    """Generate a 1-2 sentence reasoning for one candidate at this rank.
+
+    Dynamic, feature-based approach:
+    - Only mention strengths that are actually present in the profile
+    - Only mention gaps that are actually present
+    - Use concrete facts (years, title, company, specific skills)
+    - Deterministic (no random choices)
+    """
     p = c.get('profile', {})
     sig = c.get('redrob_signals', {})
     career = c.get('career_history', [])
@@ -190,103 +143,165 @@ def generate_reasoning(c, rank, total_score):
     years = p.get('years_of_experience', 0) or 0
     title = p.get('current_title', '') or 'professional'
     company = p.get('current_company', '') or 'product company'
-    top_skills = get_top_skills_for_reasoning(c, n=3)
-    n_skills = len(top_skills)
-    skills_str = ', '.join(top_skills) if top_skills else 'core ML skills'
 
-    # Compute features used in templates
-    product_company_months = 0
-    for h in career:
-        if not _is_consulting(h.get('company', '')):
-            product_company_months += (h.get('duration_months', 0) or 0)
-    product_years = product_company_months / 12.0
+    # ---- Collect actual strengths (only if present) ----
+    strengths = []
 
+    # 1. Ranking/retrieval experience (JD's core requirement)
+    has_ranking = _has_career_keyword(career, ['ranking', 'retrieval', 'recommend', 'recsys', 'search system', 'semantic search'])
+    if has_ranking:
+        strengths.append("shipped ranking/retrieval systems")
+
+    # 2. Embedding/vector experience
+    has_embedding = _has_career_keyword(career, ['embedding', 'vector', 'pinecone', 'weaviate', 'qdrant', 'faiss', 'milvus'])
+    if has_embedding:
+        strengths.append("built embedding/vector search")
+
+    # 3. LLM fine-tuning
+    has_llm = _has_career_keyword(career, ['llm', 'lora', 'qlora', 'fine-tun', 'peft', 'gpt', 'transformer'])
+    if has_llm:
+        strengths.append("LLM fine-tuning")
+
+    # 4. Evaluation frameworks
+    has_eval = _has_career_keyword(career, ['ndcg', 'mrr', 'map', 'evaluation', 'metric', 'ab test'])
+    if has_eval:
+        strengths.append("evaluation frameworks")
+
+    # 5. Product company experience
+    product_months = sum((h.get('duration_months', 0) or 0 for h in career if not _is_consulting(h.get('company', ''))))
+    if product_months >= 36:
+        strengths.append(f"{product_months / 12:.0f} years at product companies")
+
+    # 6. Long tenure (anti-title-chaser)
     longest = max((h.get('duration_months', 0) or 0 for h in career), default=0)
-    longest_years = longest / 12.0
-    longest_tenure = (f"{longest_years:.1f}-year tenure"
-                      if longest_years >= 3 else "shorter tenures")
-    n_career = len(career)
+    if longest >= 36:
+        strengths.append(f"{longest / 12:.0f}-year tenure")
 
-    # Skill highlight
-    skill_highlight = (top_skills[0] if top_skills else 'applied ML')
-    if len(top_skills) >= 2:
-        skill_highlight = f"{top_skills[0]} and {top_skills[1]}"
-
-    # Location note
+    # 7. Location
     loc = (p.get('location', '') or '').lower()
     in_pune_noida = 'pune' in loc or 'noida' in loc
-    in_tier1 = any(city in loc for city in
-                   ['bangalore', 'bengaluru', 'hyderabad', 'mumbai',
-                    'delhi', 'gurgaon', 'gurugram', 'chennai', 'kolkata'])
+    in_tier1 = any(city in loc for city in ['bangalore', 'bengaluru', 'hyderabad', 'mumbai', 'delhi', 'gurgaon', 'gurugram', 'chennai', 'kolkata'])
     if in_pune_noida:
-        location_note = "located in the JD's first-preferred city"
+        strengths.append("located in Pune/Noida")
     elif in_tier1:
-        location_note = "located in a tier-1 Indian city"
+        strengths.append("located in tier-1 India")
     elif sig.get('willing_to_relocate'):
-        location_note = "willing to relocate"
-    else:
-        location_note = "location outside the JD's preferred cities"
+        strengths.append("willing to relocate")
 
-    # Notice period
+    # 8. Availability
+    days_active = sig.get('days_active', 999) or 999
+    response_rate = sig.get('recruiter_response_rate', 0) or 0
+    if days_active <= 30 and response_rate >= 0.7:
+        strengths.append("recently active with high response rate")
+    elif days_active <= 30:
+        strengths.append("recently active")
+    elif response_rate >= 0.7:
+        strengths.append(f"{response_rate:.0%} response rate")
+
+    # 9. Notice period
     np_days = sig.get('notice_period_days', 180) or 180
     if np_days <= 30:
-        notice_note = NOTICE_NOTES['short']
+        strengths.append("short notice period")
     elif np_days <= 60:
-        notice_note = NOTICE_NOTES['medium']
-    else:
-        notice_note = NOTICE_NOTES['long']
+        strengths.append("workable notice period")
 
-    # Pick template by rank band
-    if rank <= 30:
-        template = random.choice(STRONG_TEMPLATES)
-    elif rank <= 70:
-        template = random.choice(MID_TEMPLATES)
-    else:
-        template = random.choice(LOW_TEMPLATES)
+    # 10. Seniority in title
+    title_lower = title.lower()
+    if any(t in title_lower for t in ['staff', 'principal', 'lead']):
+        strengths.append("senior title")
 
-    # Compose extras / gap_note
-    if rank <= 30:
-        if 'extras' in template:
-            extras = random.choice(STRONG_EXTRAS)
-            # Vary the extras
-            if random.random() < 0.3 and np_days <= 60:
-                extras = notice_note
-        else:
-            extras = ''
-        gap_note = None
-    else:
-        gap_note = random.choice(GAP_NOTES)
-        # Avoid duplicating if location is the actual gap
-        if 'location' in gap_note and not in_tier1 and not in_pune_noida:
-            gap_note = "location outside the JD's preferred cities"
-        extras = None
+    # 11. GitHub presence
+    if p.get('github_url'):
+        strengths.append("GitHub presence")
 
-    # Format the template
-    try:
-        text = template.format(
-            title=title,
-            company=company,
-            years=years_phrase(years),
-            n_skills=n_skills,
-            skills=skills_str,
-            extras=extras or '',
-            skill_highlight=skill_highlight,
-            product_years=f"{product_years:.1f} years",
-            longest_tenure=longest_tenure,
-            n_career=n_career,
-            location_note=location_note,
-            gap_note=gap_note or '',
-        )
-    except (KeyError, IndexError):
-        # Fallback if template formatting fails
-        text = (f"{title} at {company} ({years_phrase(years)} experience) "
-                f"with relevant skills in {skills_str}; "
-                f"{extras or gap_note or 'see profile for details'}")
+    # 12. Open to work
+    if sig.get('open_to_work'):
+        strengths.append("open to work")
 
-    # Clean up extra whitespace
+    # ---- Collect actual gaps (only if present) ----
+    gaps = []
+
+    if not has_ranking and not has_embedding:
+        gaps.append("no clear ranking/retrieval systems")
+
+    if years < 4:
+        gaps.append(f"{years:.0f} years experience")
+    elif years > 12:
+        gaps.append(f"{years:.0f} years experience")
+
+    product_years = product_months / 12.0
+    if product_years < 2:
+        gaps.append("limited product-company experience")
+
+    if longest < 18:
+        gaps.append("short tenures")
+
+    if not in_pune_noida and not in_tier1 and not sig.get('willing_to_relocate'):
+        gaps.append("outside preferred cities")
+
+    if days_active > 90:
+        gaps.append(f"inactive for {days_active:.0f} days")
+
+    if response_rate < 0.3:
+        gaps.append(f"{response_rate:.0%} response rate")
+
+    if np_days > 60:
+        gaps.append(f"{np_days:.0f}-day notice period")
+
+    if not sig.get('open_to_work'):
+        gaps.append("not open to work")
+
+    # ---- Build the reasoning text ----
+    parts = []
+
+    # Base: title at company with years
+    base = f"{title} at {company} ({years_phrase(years)})"
+    parts.append(base)
+
+    # Add skills (if any)
+    top_skills = get_top_skills_for_reasoning(c, n=2)
+    if top_skills:
+        skills_str = ', '.join(top_skills)
+        parts.append(f"with {skills_str}")
+
+    # Add strengths (prioritize JD-critical ones)
+    jd_critical = [s for s in strengths if any(kw in s.lower() for kw in ['ranking', 'retrieval', 'embedding', 'vector', 'llm', 'evaluation'])]
+    other_strengths = [s for s in strengths if s not in jd_critical]
+
+    if jd_critical:
+        parts.append("; ".join(jd_critical[:2]))
+    elif other_strengths:
+        parts.append(other_strengths[0])
+
+    # Add gap if rank is mid/low
+    if rank > 30 and gaps:
+        parts.append(f"but {gaps[0]}")
+    elif rank > 70 and len(gaps) > 1:
+        parts.append(f"but {gaps[0]} and {gaps[1]}")
+
+    # Join and clean
+    text = "; ".join(parts) if len(parts) > 1 else parts[0] if parts else "Candidate profile"
     text = re.sub(r'\s+', ' ', text).strip()
 
+    # Ensure it ends properly
+    if not text.endswith('.') and len(text) > 50:
+        text += '.'
+
     return text
+
+
+def _has_career_keyword(career, keywords):
+    """Check if any career history entry contains a JD-relevant keyword."""
+    if not career:
+        return False
+    career_parts = []
+    for h in career:
+        career_parts.append((h.get('title', '') or '') + ' ' +
+                            (h.get('company', '') or '') + ' ' +
+                            (h.get('description', '') or '') + ' ' +
+                            (h.get('industry', '') or ''))
+    career_text = ' '.join(career_parts).lower()
+    return any(kw in career_text for kw in keywords)
 
 
 def _is_consulting(name):
