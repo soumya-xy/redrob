@@ -886,7 +886,7 @@ with tab3:
                 
                 # Write CSV
                 rows = []
-                for rank, (idx, score) in enumerate(zip(sorted_indices, sorted_scores), 1):
+                for rank, (idx, score) in enumerate(zip(sorted_indices[:100], sorted_scores[:100]), 1):
                     cid = artifacts['candidate_ids'][idx]
                     c = candidates_dict.get(cid, {})
                     
