@@ -560,7 +560,6 @@ with tab1:
 
 # --- TAB 2: LIVE RANKER & DISCOVERY ---
 with tab2:
-    st.write(f"DEBUG: database path = {CANDIDATES_PATH}, exists = {os.path.exists(CANDIDATES_PATH)}, size = {os.path.getsize(CANDIDATES_PATH) if os.path.exists(CANDIDATES_PATH) else 0} bytes, parsed candidates = {len(candidates_dict)}")
     if not all_artifacts_exist:
         st.error("⚠️ Offline precomputation artifacts are missing or incomplete. Please go to the **Pipeline Precomputation** tab and trigger the precompute script.")
     else:
@@ -610,7 +609,7 @@ with tab2:
         # Compile list of candidates to display
         display_rows = []
         for i, idx in enumerate(sorted_indices):
-            cid = artifacts['candidate_ids'][idx]
+            cid = artifacts['candidate_ids'][idx].strip()
             c = candidates_dict.get(cid, {})
             score = sorted_scores[i]
             raw_score = sorted_raw_scores[i]
