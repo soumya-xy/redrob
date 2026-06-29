@@ -218,7 +218,19 @@ def retrieve_top_k(artifacts, k=500):
     with open("job_description.txt") as f:
         jd_text = f.read()
     # Use the most JD-relevant sections
-    jd_query_tokens = re.findall(r'\b[a-z][a-z\-]{2,}\b', jd_text.lower())
+    tokens = re.findall(r'\b[a-z][a-z\-]{2,}\b', jd_text.lower())
+    jd_keywords = {
+        'embeddings', 'embedding', 'retrieval', 'ranking', 'llm', 'llms', 'fine-tuning', 'fine-tune',
+        'lora', 'qlora', 'peft', 'vector', 'database', 'databases', 'pinecone', 'weaviate',
+        'qdrant', 'milvus', 'opensearch', 'elasticsearch', 'faiss', 'ndcg', 'mrr', 'map',
+        'evaluation', 'python', 'nlp', 'search', 'matching', 'recommender', 'recommendation',
+        'learning-to-rank', 're-ranking', 'benchmarks', 'transformer', 'transformers',
+        'dense', 'sparse', 'hybrid', 'similarity', 'semantic', 'information', 'ir'
+    }
+    jd_query_tokens = list(set(w for w in tokens if w in jd_keywords))
+    if not jd_query_tokens:
+        stopwords = {'the', 'and', 'for', 'you', 'will', 'with', 'our', 'are', 'that', 'this', 'from', 'your', 'have'}
+        jd_query_tokens = list(set(w for w in tokens if w not in stopwords))
     bm25_scores = artifacts['bm25'].get_scores(jd_query_tokens)
     # Normalize to [0, 1]
     if bm25_scores.max() > 0:
