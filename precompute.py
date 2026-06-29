@@ -139,7 +139,10 @@ def text_for_bm25(c):
     for h in c.get('career_history', []):
         parts.append(h.get('title', '') or '')
         parts.append(h.get('company', '') or '')
-        parts.append(h.get('description', '') or '')
+        desc = h.get('description', '') or ''
+        if len(desc) > 400:
+            desc = desc[:400]
+        parts.append(desc)
     for s in c.get('skills', []):
         parts.append(s.get('name', '') or '')
     for e in c.get('education', []):
@@ -580,6 +583,12 @@ def main():
     with open(ARTIFACTS_DIR / "feature_names.json", 'w') as f:
         json.dump(feature_names, f, indent=2)
 
+    # Free memory
+    del feature_rows
+    del features_df
+    import gc
+    gc.collect()
+
     # ----- 2. Credibility -----
     print("Computing credibility scores ...")
     cred_scores = np.array([credibility_score(c) for c in candidates],
@@ -587,6 +596,8 @@ def main():
     np.save(ARTIFACTS_DIR / "credibility_scores.npy", cred_scores)
     print(f"  credibility: min={cred_scores.min():.2f}, "
           f"mean={cred_scores.mean():.2f}, max={cred_scores.max():.2f}")
+    del cred_scores
+    gc.collect()
 
     # ----- 3. Hard filter mask -----
     print("Computing hard-filter mask ...")
@@ -595,14 +606,22 @@ def main():
     np.save(ARTIFACTS_DIR / "hard_filter_mask.npy", hard_mask)
     print(f"  passed: {hard_mask.sum()} / {len(hard_mask)} "
           f"({100*hard_mask.mean():.1f}%)")
+    del hard_mask
+    gc.collect()
 
     # ----- 4. BM25 index -----
     print("Building BM25 index ...")
     bm25_corpus = [text_for_bm25(c).split() for c in candidates]
     bm25 = BM25Okapi(bm25_corpus)
-    with open(ARTIFACTS_DIR / "bm25_index.pkl", 'wb') as f:
+    import gzip
+    with gzip.open(ARTIFACTS_DIR / "bm25_index.pkl.gz", 'wb') as f:
         pickle.dump(bm25, f, protocol=pickle.HIGHEST_PROTOCOL)
     print(f"  BM25 corpus: {len(bm25_corpus)} docs")
+
+    # Free memory
+    del bm25_corpus
+    del bm25
+    gc.collect()
 
     # ----- 5. Sentence-transformer embeddings -----
     print(f"Loading model {MODEL_NAME} ...")
@@ -619,6 +638,8 @@ def main():
         convert_to_numpy=True,
     )
     print(f"  Embeddings shape: {candidate_embeddings.shape}")
+    # Save as float16 to keep file size under 100MB limit for GitHub deployment
+    candidate_embeddings = candidate_embeddings.astype(np.float16)
     np.save(ARTIFACTS_DIR / "candidate_embeddings.npy", candidate_embeddings)
 
     # ----- 6. JD embedding -----
@@ -642,7 +663,11 @@ def main():
     id_to_idx = {cid: i for i, cid in enumerate(candidate_ids)}
     pick_indices = [id_to_idx[pid] for pid in pick_ids if pid in id_to_idx]
     print(f"  Found {len(pick_indices)}/{len(pick_ids)} picks in candidate pool")
-    centroid = candidate_embeddings[pick_indices].mean(axis=0)
+    if len(pick_indices) > 0:
+        centroid = candidate_embeddings[pick_indices].mean(axis=0)
+    else:
+        print("  WARNING: No centroid picks found in the pool. Falling back to JD embedding as centroid.")
+        centroid = jd_embedding[0]
     centroid = centroid / (np.linalg.norm(centroid) + 1e-12)  # re-normalize
     np.save(ARTIFACTS_DIR / "centroid.npy", centroid)
     print(f"  Centroid shape: {centroid.shape}")

@@ -154,9 +154,9 @@ def load_artifacts():
     print(f"  features: {features_df.shape}, names: {len(feature_names)}")
 
     # Embeddings
-    candidate_embeddings = np.load(ARTIFACTS_DIR / "candidate_embeddings.npy")
-    jd_embedding = np.load(ARTIFACTS_DIR / "jd_embedding.npy")
-    centroid = np.load(ARTIFACTS_DIR / "centroid.npy")
+    candidate_embeddings = np.load(ARTIFACTS_DIR / "candidate_embeddings.npy").astype(np.float32)
+    jd_embedding = np.load(ARTIFACTS_DIR / "jd_embedding.npy").astype(np.float32)
+    centroid = np.load(ARTIFACTS_DIR / "centroid.npy").astype(np.float32)
     print(f"  embeddings: {candidate_embeddings.shape}, "
           f"JD: {jd_embedding.shape}, centroid: {centroid.shape}")
 
@@ -167,8 +167,14 @@ def load_artifacts():
           f"hard filter pass: {hard_mask.sum()}/{n}")
 
     # BM25
-    with open(ARTIFACTS_DIR / "bm25_index.pkl", 'rb') as f:
-        bm25 = pickle.load(f)
+    gz_path = ARTIFACTS_DIR / "bm25_index.pkl.gz"
+    if gz_path.exists():
+        import gzip
+        with gzip.open(gz_path, 'rb') as f:
+            bm25 = pickle.load(f)
+    else:
+        with open(ARTIFACTS_DIR / "bm25_index.pkl", 'rb') as f:
+            bm25 = pickle.load(f)
     print(f"  BM25 corpus: {len(bm25.doc_freqs)} docs")
 
     # Centroid picks (for reasoning metadata)
@@ -204,6 +210,7 @@ def retrieve_top_k(artifacts, k=500):
     t0 = time.time()
 
     n = len(artifacts['candidate_ids'])
+    k = min(k, n)
     scores = np.zeros(n, dtype=np.float32)
 
     # ---- 1. BM25 over the JD text ----
@@ -259,8 +266,11 @@ def retrieve_top_k(artifacts, k=500):
     for pid in pick_ids:
         if pid in id_to_idx:
             masked_scores[id_to_idx[pid]] = np.inf  # force inclusion
-    top_k_indices = np.argpartition(-masked_scores, k)[:k]
-    top_k_indices = top_k_indices[np.argsort(-masked_scores[top_k_indices])]
+    if k < n:
+        top_k_indices = np.argpartition(-masked_scores, k)[:k]
+        top_k_indices = top_k_indices[np.argsort(-masked_scores[top_k_indices])]
+    else:
+        top_k_indices = np.argsort(-masked_scores)[:k]
     print(f"[{time.time():.1f}]   Retrieved {k} in {time.time()-t0:.1f}s")
     return top_k_indices
 

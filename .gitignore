@@ -66,9 +66,9 @@ Thumbs.db
 Desktop.ini
 
 # Project-specific generated files
-artifacts/
-*.pkl
-*.npy
+# artifacts/
+# *.pkl
+# *.npy
 team_*.csv
 shortlist.json
 
