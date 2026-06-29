@@ -560,7 +560,7 @@ with tab1:
 
 # --- TAB 2: LIVE RANKER & DISCOVERY ---
 with tab2:
-    st.write(f"DEBUG: cwd = {os.getcwd()}, database path = {CANDIDATES_PATH}, exists = {os.path.exists(CANDIDATES_PATH)}, size = {os.path.getsize(CANDIDATES_PATH) if os.path.exists(CANDIDATES_PATH) else 0} bytes, parsed candidates = {len(candidates_dict)}")
+    st.write(f"DEBUG: database path = {CANDIDATES_PATH}, exists = {os.path.exists(CANDIDATES_PATH)}, size = {os.path.getsize(CANDIDATES_PATH) if os.path.exists(CANDIDATES_PATH) else 0} bytes, parsed candidates = {len(candidates_dict)}")
     if not all_artifacts_exist:
         st.error("⚠️ Offline precomputation artifacts are missing or incomplete. Please go to the **Pipeline Precomputation** tab and trigger the precompute script.")
     else:
