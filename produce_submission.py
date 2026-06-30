@@ -356,20 +356,36 @@ def main():
 
     overall_start = time.time()
 
-    # Load candidates.jsonl for reasoning generation
-    # (we need full profile data, not just features)
-    print(f"[{time.time():.1f}] Loading candidates.jsonl for reasoning ...")
+    # Load candidate profiles for reasoning generation
+    print(f"[{time.time():.1f}] Loading candidate profiles for reasoning ...")
     candidates = {}
-    with open("candidates.jsonl", 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                c = json.loads(line)
-                candidates[c['candidate_id']] = c
-            except json.JSONDecodeError:
-                continue
+    
+    # Try loading precomputed top candidate profiles first
+    cache_path = ARTIFACTS_DIR / "candidate_profiles.pkl"
+    if cache_path.exists():
+        try:
+            with open(cache_path, 'rb') as f:
+                candidates.update(pickle.load(f))
+        except Exception:
+            pass
+
+    # If candidates.jsonl is available locally, load/merge it as well
+    jd_file = Path("candidates.jsonl")
+    if jd_file.exists():
+        try:
+            with open(jd_file, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        c = json.loads(line)
+                        candidates[c['candidate_id']] = c
+                    except json.JSONDecodeError:
+                        continue
+        except Exception:
+            pass
+            
     print(f"   loaded {len(candidates)} candidates for reasoning")
 
     # Load artifacts

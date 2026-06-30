@@ -455,18 +455,32 @@ def run_custom_ranking(artifacts, weights_dict, apply_cred=True, cred_floor=0.3)
 @st.cache_resource
 def load_candidates_dict(mtime):
     candidates = {}
-    if not os.path.exists(CANDIDATES_PATH):
-        return candidates
-    with open(CANDIDATES_PATH, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                c = json.loads(line)
-                candidates[c['candidate_id']] = c
-            except json.JSONDecodeError:
-                continue
+    
+    # Try loading precomputed top candidate profiles first (great for Cloud / low memory)
+    cache_path = ARTIFACTS_DIR / "candidate_profiles.pkl"
+    if cache_path.exists():
+        try:
+            with open(cache_path, 'rb') as f:
+                candidates.update(pickle.load(f))
+        except Exception:
+            pass
+
+    # If candidates.jsonl is available locally, load/merge it as well to have the full 100k
+    if os.path.exists(CANDIDATES_PATH):
+        try:
+            with open(CANDIDATES_PATH, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        c = json.loads(line)
+                        candidates[c['candidate_id']] = c
+                    except json.JSONDecodeError:
+                        continue
+        except Exception:
+            pass
+            
     return candidates
 
 # Tab selection
